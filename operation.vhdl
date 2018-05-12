@@ -1,6 +1,7 @@
 library ieee,std,work;
 use ieee.std_logic_1164.all;
 use work.std_logic_textio.all;
+use ieee.numeric_std.all;
 use std.textio.all;
 use work.STATE_CONSTANTS.all;
 
@@ -22,6 +23,7 @@ entity operation is
 end entity operation;
 	
 architecture operation of operation is
+	-- (Noobgineer, https://stackoverflow.com/questions/36881697/array-of-std-logic-vector?rq=1)
 	type OPCODES is array (0 to 14) of std_logic_vector(0 to OPERAND_BITS-1);
 	shared variable instructions: OPCODES;
 	shared variable counter: integer := 0;
@@ -80,11 +82,18 @@ begin
 		end process file_io;
 
 		operates: process(clock) is
+				variable cycle: unsigned(3 downto 0);				
+
 		begin
 			if rising_edge(clock) then
 				clock_cycle := clock_cycle + 1;
-				
+				cycle := to_unsigned(clock_cycle, 4);
+				pc0 <= cycle(0);
+				pc1 <= cycle(1);
+				pc2 <= cycle(2);
+				pc3 <= cycle(3);
 
+				
 
 			else
 				fetch <= '0';
