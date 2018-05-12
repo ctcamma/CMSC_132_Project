@@ -8,14 +8,14 @@ use work.STATE_CONSTANTS.all;
 -- Entity Definition
 entity operation is
 	port (clock: in std_logic;
-		fetch: out std_logic;
-		decode: out std_logic;
-		execute: out std_logic;
-		memory: out std_logic;
-		writeback: out std_logic;
-		sign_flag: out std_logic;
-		underflow_flag: out std_logic;
-		overflow_flag: out std_logic;
+		fetch: inout std_logic;
+		decode: inout std_logic;
+		execute: inout std_logic;
+		memory: inout std_logic;
+		writeback: inout std_logic;
+		sign_flag: inout std_logic;
+		underflow_flag: inout std_logic;
+		overflow_flag: inout std_logic;
 		pc0: out std_logic;
 		pc1: out std_logic;
 		pc2: out std_logic;
@@ -82,10 +82,17 @@ begin
 		end process file_io;
 
 		operates: process(clock) is
-				variable cycle: unsigned(3 downto 0);				
+				variable cycle: unsigned(3 downto 0);
+				variable i: integer := 0;
+				variable status: std_logic_vector(0 to 2);
+				variable opcode: std_logic_vector(0 to OPERAND_BITS-1);
+				variable operation: std_logic_vector(0 to 2);
+				variable mode: std_logic;
+				variable operand: std_logic_vector(0 to 4);		
 
 		begin
 			if rising_edge(clock) then
+				i := 0;
 				clock_cycle := clock_cycle + 1;
 				cycle := to_unsigned(clock_cycle, 4);
 				pc0 <= cycle(0);
@@ -93,7 +100,150 @@ begin
 				pc2 <= cycle(2);
 				pc3 <= cycle(3);
 
-				
+				if clock_cycle <= counter then
+					while i < clock_cycle loop
+
+						status(0) := instructions(i)(0);
+						status(1) := instructions(i)(1);
+						status(2) := instructions(i)(2);
+
+						report "status" & std_logic'image(status(0)) &
+											std_logic'image(status(1)) &
+											std_logic'image(status(2));
+
+						case status is
+							when toFetch =>
+								if(fetch = '0') then
+									report "fetch";
+									fetch <= '1';
+									report std_logic'image(instructions(i)(0)) &
+											std_logic'image(instructions(i)(1)) &
+											std_logic'image(instructions(i)(2));
+									instructions(i)(2) := '1';
+									report std_logic'image(instructions(i)(0)) &
+											std_logic'image(instructions(i)(1)) &
+											std_logic'image(instructions(i)(2));
+								end if;
+							when toDecode =>
+								if(decode = '0') then
+									report "decode";
+									decode <= '1';
+									instructions(i)(1) := '1';
+									instructions(i)(2) := '0';
+									report std_logic'image(instructions(i)(0)) &
+											std_logic'image(instructions(i)(1)) &
+											std_logic'image(instructions(i)(2));
+								end if;
+							when toExecute =>
+								if(execute = '0') then
+									report "execute";
+									execute <= '1';
+									instructions(i)(2) := '1';
+									report std_logic'image(instructions(i)(0)) &
+											std_logic'image(instructions(i)(1)) &
+											std_logic'image(instructions(i)(2));
+								end if;
+							when toMemory =>
+								if(memory = '0') then
+									report "memory";
+									memory <= '1';
+									instructions(i)(0) := '1';
+									instructions(i)(1) := '0';
+									instructions(i)(2) := '0';
+									report std_logic'image(instructions(i)(0)) &
+											std_logic'image(instructions(i)(1)) &
+											std_logic'image(instructions(i)(2));
+								end if;
+							when toWrite =>
+								if(writeback = '0') then
+									report "writeback";
+									writeback <= '1';
+									instructions(i)(2) := '1';
+									report std_logic'image(instructions(i)(0)) &
+											std_logic'image(instructions(i)(1)) &
+											std_logic'image(instructions(i)(2));
+								end if;
+							when others =>
+								report "";
+						end case;
+
+						i := i + 1;
+						report "i: " & integer'image(i);
+					end loop;
+
+
+				else
+					while i < counter loop
+						status(0) := instructions(i)(0);
+						status(1) := instructions(i)(1);
+						status(2) := instructions(i)(2);
+
+						report "status" & std_logic'image(status(0)) &
+											std_logic'image(status(1)) &
+											std_logic'image(status(2));
+
+						case status is
+							when toFetch =>
+								if(fetch = '0') then
+									report "fetch";
+									fetch <= '1';
+									report std_logic'image(instructions(i)(0)) &
+											std_logic'image(instructions(i)(1)) &
+											std_logic'image(instructions(i)(2));
+									instructions(i)(2) := '1';
+									report std_logic'image(instructions(i)(0)) &
+											std_logic'image(instructions(i)(1)) &
+											std_logic'image(instructions(i)(2));
+								end if;
+							when toDecode =>
+								if(decode = '0') then
+									report "decode";
+									decode <= '1';
+									instructions(i)(1) := '1';
+									instructions(i)(2) := '0';
+									report std_logic'image(instructions(i)(0)) &
+											std_logic'image(instructions(i)(1)) &
+											std_logic'image(instructions(i)(2));
+								end if;
+							when toExecute =>
+								if(execute = '0') then
+									report "execute";
+									execute <= '1';
+									instructions(i)(2) := '1';
+									report std_logic'image(instructions(i)(0)) &
+											std_logic'image(instructions(i)(1)) &
+											std_logic'image(instructions(i)(2));
+								end if;
+							when toMemory =>
+								if(memory = '0') then
+									report "memory";
+									memory <= '1';
+									instructions(i)(0) := '1';
+									instructions(i)(1) := '0';
+									instructions(i)(2) := '0';
+									report std_logic'image(instructions(i)(0)) &
+											std_logic'image(instructions(i)(1)) &
+											std_logic'image(instructions(i)(2));
+								end if;
+							when toWrite =>
+								if(writeback = '0') then
+									report "writeback";
+									writeback <= '1';
+									instructions(i)(2) := '1';
+									report std_logic'image(instructions(i)(0)) &
+											std_logic'image(instructions(i)(1)) &
+											std_logic'image(instructions(i)(2));
+								end if;
+							when others =>
+								report "";
+						end case;
+
+						i := i + 1;
+						report "i: " & integer'image(i);
+					end loop;
+				end if;
+
+
 
 			else
 				fetch <= '0';

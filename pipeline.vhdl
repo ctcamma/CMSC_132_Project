@@ -11,6 +11,14 @@ package STATE_CONSTANTS is
 	constant division: std_logic_vector(0 to 2) := "100";
 	constant modulo: std_logic_vector(0 to 2) := "101";
 
+
+	constant toFetch: std_logic_vector(0 to 2) := "000";
+	constant toDecode: std_logic_vector(0 to 2) := "001";
+	constant toExecute: std_logic_vector(0 to 2) := "010";
+	constant toMemory: std_logic_vector(0 to 2) := "011";
+	constant toWrite: std_logic_vector(0 to 2) := "100";
+	constant toEnd: std_logic_vector(0 to 2) := "101";
+
 	constant OPERAND_BITS: integer := 24;
 end package;
 
@@ -42,14 +50,14 @@ architecture file_reading of pipeline is
 
 	component operation is
 		 port (clock: in std_logic;
-			fetch: out std_logic;
-			decode: out std_logic;
-			execute: out std_logic;
-			memory: out std_logic;
-			writeback: out std_logic;
-			sign_flag: out std_logic;
-			underflow_flag: out std_logic;
-			overflow_flag: out std_logic;
+			fetch: inout std_logic;
+			decode: inout std_logic;
+			execute: inout std_logic;
+			memory: inout std_logic;
+			writeback: inout std_logic;
+			sign_flag: inout std_logic;
+			underflow_flag: inout std_logic;
+			overflow_flag: inout std_logic;
 			pc0: out std_logic;
 			pc1: out std_logic;
 			pc2: out std_logic;
