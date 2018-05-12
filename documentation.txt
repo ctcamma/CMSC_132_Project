@@ -1,6 +1,17 @@
 
+for file formatting,
+	each line in the text file is represented as a single instruction
+	1st-3rd binary digit of line is considered as an operation
+	4th-21st binary digit of line are the operands
+	each operation is consisted of 6 binary digits
+	1st binary digit for each operation represents whether the instruction is a register or an immediate value
+	the succeeding binary digits after the classifier bit of an operand will be:
+		- the decimal equivalent of the value if the classifier bit represents an immediate
+		- the register n if the classifier bit represents a register
+
 000 0 00000 0 00000 0 00000 - 21-bit opcode
 
+operation:
 000 - load
 001 - add
 010 - sub
@@ -8,4 +19,6 @@
 100 - div
 101 - mod
 
-
+operation classification:
+0 - immediate value
+1 - register
