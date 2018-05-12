@@ -22,15 +22,16 @@ entity operation is
 end entity operation;
 	
 architecture operation of operation is
-	type OPCODES is array (0 to 14) of std_logic_vector(0 to 20);
+	type OPCODES is array (0 to 14) of std_logic_vector(0 to OPERAND_BITS-1);
 	shared variable instructions: OPCODES;
 	shared variable counter: integer := 0;
+	shared variable clock_cycle: integer := 0;
 begin
 	file_io:
 			process is
 				file in_file : text open read_mode is "file_name.txt";
 				variable in_line : line;
-				variable opcode: std_logic_vector(0 to 20);
+				variable opcode: std_logic_vector(0 to OPERAND_BITS-1);
 				variable operation: std_logic_vector(0 to 2);
 				variable mode: std_logic;
 				variable operand: std_logic_vector(0 to 4);
@@ -38,16 +39,19 @@ begin
  			begin
  				while not endfile(in_file) loop
  					readline(in_file, in_line);
- 					test_loop: for count in 0 to 20 loop
+ 					test_loop: for count in 3 to OPERAND_BITS-1 loop
  	  					read(in_line, opcode(count));
  					end loop;
 
+ 					opcode(0) := '0';
+ 					opcode(1) := '0';
+ 					opcode(2) := '0';
+
  					instructions(counter) := opcode;
 
- 					operation(0) := instructions(counter)(0);
-				    operation(1) := instructions(counter)(1);
-				    operation(2) := instructions(counter)(2);
-				    operation(2) := '1';
+ 					operation(0) := instructions(counter)(3);
+				    operation(1) := instructions(counter)(4);
+				    operation(2) := instructions(counter)(5);
 						
 					report "operation: " & 	std_logic'image(operation(0)) &
 											std_logic'image(operation(1)) &
@@ -77,7 +81,26 @@ begin
 
 		operates: process(clock) is
 		begin
-			
+			if rising_edge(clock) then
+				clock_cycle := clock_cycle + 1;
+				
+
+
+			else
+				fetch <= '0';
+				decode <= '0';
+				execute <= '0';
+				memory <= '0';
+				writeback <= '0';
+				sign_flag <= '0';
+				underflow_flag <= '0';
+				overflow_flag <= '0';
+				pc0 <= '0';
+				pc1 <= '0';
+				pc2 <= '0';
+				pc3 <= '0';
+			end if;
 		end process operates;
+
 end architecture operation;
 

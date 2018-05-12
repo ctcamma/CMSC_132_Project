@@ -10,6 +10,8 @@ package STATE_CONSTANTS is
 	constant multiplication: std_logic_vector(0 to 2) := "011";
 	constant division: std_logic_vector(0 to 2) := "100";
 	constant modulo: std_logic_vector(0 to 2) := "101";
+
+	constant OPERAND_BITS: integer := 24;
 end package;
 
 
@@ -20,12 +22,12 @@ use std.textio.all;
 use work.STATE_CONSTANTS.all;
 
 entity pipeline is
-	constant PERIOD1: time := 1 sec; -- clock period
+	constant PERIOD1: time := 1 ns; -- clock period
 end pipeline;
 
 architecture file_reading of pipeline is
 	signal clock: std_logic := '1';
-	signal fetch: std_logic := '0';
+	signal fetch: std_logic := '1';
 	signal decode: std_logic := '0';
 	signal execute: std_logic := '0';
 	signal memory: std_logic := '0';
