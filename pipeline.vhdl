@@ -20,54 +20,44 @@ use std.textio.all;
 use work.STATE_CONSTANTS.all;
 
 entity pipeline is
+	constant PERIOD1: time := 1 sec; -- clock period
 end pipeline;
 
 architecture file_reading of pipeline is
+	signal clock: std_logic := '1';
+	signal fetch: std_logic := '0';
+	signal decode: std_logic := '0';
+	signal execute: std_logic := '0';
+	signal memory: std_logic := '0';
+	signal writeback: std_logic := '0';
+	signal sign_flag: std_logic := '0';
+	signal underflow_flag: std_logic := '0';
+	signal overflow_flag: std_logic := '0';
+	signal pc0: std_logic := '0';
+	signal pc1: std_logic := '0';
+	signal pc2: std_logic := '0';
+	signal pc3: std_logic := '0';
+
+	component operation is
+		 port (clock: in std_logic;
+			fetch: out std_logic;
+			decode: out std_logic;
+			execute: out std_logic;
+			memory: out std_logic;
+			writeback: out std_logic;
+			sign_flag: out std_logic;
+			underflow_flag: out std_logic;
+			overflow_flag: out std_logic;
+			pc0: out std_logic;
+			pc1: out std_logic;
+			pc2: out std_logic;
+			pc3: out std_logic); -- the signal data input			  				
+	end component operation;
+
 	begin
-		file_io:
-			process is
-				file in_file : text open read_mode is "file_name.txt";
-				variable in_line : line;
-				variable opcode: std_logic_vector(0 to 20);
-				variable operation: std_logic_vector(0 to 2);
-				variable mode: std_logic;
-				variable operand: std_logic_vector(0 to 4);
+		uut: component operation port map(clock, fetch, decode, execute, memory, writeback, sign_flag, underflow_flag,
+											overflow_flag, pc0, pc1, pc2, pc3);
+		clk: clock <= not clock after (PERIOD1/2);
 
 
- 			begin
- 				while not endfile(in_file) loop
- 					readline(in_file, in_line);
- 					test_loop: for count in 0 to 20 loop
- 	  					read(in_line, opcode(count));
- 	  					wait for 1 ns;
- 					end loop;
-
-				    operation(0) := opcode(0);
-				    operation(1) := opcode(1);
-				    operation(2) := opcode(2);
- 					
- 					report "operation: " & 	std_logic'image(operation(0)) &
- 											std_logic'image(operation(1)) &
- 											std_logic'image(operation(2));
- 					case operation is
- 						when load =>
- 							report "load";
- 						when addition =>
- 							report "addition";
- 						when subtraction =>
- 							report "subtraction";
- 						when multiplication =>
- 							report "multiplication";
- 						when division =>
- 							report "division";
- 						when modulo =>
- 							report "modulo";
- 						when others =>
- 							report "NONE";
- 					end case;
-
- 				end loop;
- 				assert false report "simulation done" severity note;
- 				wait;
-		end process;
 end file_reading;
