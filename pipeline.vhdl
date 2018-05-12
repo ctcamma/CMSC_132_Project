@@ -20,6 +20,7 @@ package STATE_CONSTANTS is
 	constant toEnd: std_logic_vector(0 to 2) := "101";
 
 	constant OPERAND_BITS: integer := 24;
+	constant REGISTER_COUNT: integer := 32;
 end package;
 
 
