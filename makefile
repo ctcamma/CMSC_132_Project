@@ -5,5 +5,5 @@ run: $(files)
 	ghdl -a pipeline.vhdl
 	ghdl -a operation.vhdl
 	ghdl -e pipeline
-	ghdl -r pipeline --vcd="sample.vcd"
+	ghdl -r pipeline --vcd="pipelining.vcd"
 	rm pipeline

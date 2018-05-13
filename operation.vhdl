@@ -87,11 +87,11 @@ begin
 			if rising_edge(clock) then
 				i := 0;
 				clock_cycle := clock_cycle + 1;
-				--cycle := to_unsigned(clock_cycle, 4);
-				--pc0 <= cycle(0);
-				--pc1 <= cycle(1);
-				--pc2 <= cycle(2);
-				--pc3 <= cycle(3);
+				cycle := to_unsigned(clock_cycle, 4);
+				pc0 <= cycle(0);
+				pc1 <= cycle(1);
+				pc2 <= cycle(2);
+				pc3 <= cycle(3);
 
 				if clock_cycle <= instructionCount then 
 					iterator := clock_cycle;
