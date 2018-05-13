@@ -42,7 +42,7 @@ architecture operation of operation is
 	shared variable newlyFreed: integer := -1;
 	shared variable iterator: integer := 0;
 begin
-	file_io:
+	file_io:																							-- file reading per line
 			process is
 				file in_file : text open read_mode is "file_name.txt";
 				variable in_line : line;
@@ -58,20 +58,20 @@ begin
  	  					read(in_line, opcode(count));
  					end loop;
 
- 					opcode(0) := '0';
+ 					opcode(0) := '0';																	-- initialize the stage for each instruction being red (F,D,E,M,W)
  					opcode(1) := '0';
  					opcode(2) := '0';
 
  					instructions(instructionCount) := opcode;
 
- 					instructionCount := instructionCount + 1;
+ 					instructionCount := instructionCount + 1;											-- update the format of instructions (add 3 bits (initialized stage) before the instruction)
  				end loop;
  				assert false report "simulation done" severity note;
  				report "instructions: " & integer'image(instructionCount);
  				wait;
 		end process file_io;
 
-		operates: process(clock) is
+		operates: process(clock) is 																	-- pipelining body
 				variable cycle: unsigned(3 downto 0);
 				variable i: integer := 0;
 				variable status: std_logic_vector(0 to 2);
@@ -87,14 +87,14 @@ begin
 				variable source1: integer;
 				variable source2: integer;
 		begin
-			if rising_edge(clock) then
+			if rising_edge(clock) then																	-- changes in the pipeline for every rising edge of the clock
 				i := 0;
 				clock_cycle := clock_cycle + 1;
-				--cycle := to_unsigned(clock_cycle, 4);
-				--pc0 <= cycle(0);
-				--pc1 <= cycle(1);
-				--pc2 <= cycle(2);
-				--pc3 <= cycle(3);
+				cycle := to_unsigned(clock_cycle, 4);
+				pc0 <= cycle(0);																		-- initialization of PC
+				pc1 <= cycle(1);
+				pc2 <= cycle(2);
+				pc3 <= cycle(3);
 
 				if clock_cycle <= instructionCount then 
 					iterator := clock_cycle;
@@ -108,9 +108,8 @@ begin
 					status(2) := instructions(i)(2);
 
 
-					case status is
-						when toFetch =>
-							report "toFetch";
+					case status is 																		-- checks the current stage of the instruction 
+						when toFetch =>																	-- the instruction had just started and asks to proceed to fetch stage
 							if(fetch = '0') then
 								report "fetch";
 								fetch <= '1';
@@ -159,8 +158,8 @@ begin
 									fetch <= '1';
 								end if;
 							end if;
-						when toDecode =>
-							report "toDecode";
+
+						when toDecode =>																			-- the instruction is currently on the fetch stage and asks to proceed to decode stage
 							if(decode = '0') then
 								report "decode";
 								decode <= '1';
@@ -249,9 +248,8 @@ begin
 									fetchStall := 1;
 								end if;
 							end if;
-						when toExecute =>
-							report "toExecute";
-							instructionStage(i)(2) := '1';
+
+						when toExecute =>																				-- the instruction is currently on the decode stage and asks to proceed to execute stage
 							if(execute = '0') then
 								instructionStage(i)(2) := '0';
 								report "execute";
@@ -261,7 +259,7 @@ begin
 								operation(1) := instructions(i)(4);
 								operation(2) := instructions(i)(5);
 								case operation is
-									when load =>
+									when load =>																		-- execute load operation
 										report "load";
 										mode := instructions(i)(6);
 										if mode = '1' then
@@ -299,7 +297,7 @@ begin
 													": " & integer'image(reg_value(destination));
 											end if;
 										end if;
-									when addition =>
+									when addition =>																		-- execute addition operation
 										report "addition";
 										mode := instructions(i)(6);
 										if mode = '1' then
@@ -365,7 +363,7 @@ begin
 												overflow_flag <= '1';
 											end if;												
 										end if;
-									when subtraction =>
+									when subtraction =>																		-- execute subtraction operation
 										report "subtraction";
 										mode := instructions(i)(6);
 										if mode = '1' then
@@ -431,7 +429,7 @@ begin
 												overflow_flag <= '1';
 											end if;												
 										end if;
-									when multiplication =>
+									when multiplication =>																	-- execute multiplication operation
 										report "multiplication";
 										mode := instructions(i)(6);
 										if mode = '1' then
@@ -497,7 +495,7 @@ begin
 												overflow_flag <= '1';
 											end if;												
 										end if;
-									when division =>
+									when division =>																		-- execute division operation
 										report "division";
 										mode := instructions(i)(6);
 										if mode = '1' then
@@ -563,7 +561,7 @@ begin
 												overflow_flag <= '1';
 											end if;												
 										end if;
-									when modulo =>
+									when modulo =>																			-- execute modulo operation
 										report "modulo";
 										mode := instructions(i)(6);
 										if mode = '1' then
@@ -641,8 +639,7 @@ begin
 									decodeStall := 1;
 								end if;
 							end if;
-						when toMemory =>
-							report "toMemory";
+						when toMemory =>																				-- the instruction is currently on the execute stage and asks to proceed to memory stage
 							instructionStage(i)(3) := '1';
 							if(memory = '0') then
 								instructionStage(i)(3) := '0';
@@ -659,8 +656,9 @@ begin
 									executeStall := 1;
 								end if ;
 							end if;
-						when toWrite =>
-							report "toWrite";
+
+						when toWrite =>																					-- the instruction is currently on the memory stage and asks to proceed to writeback stage
+
 							instructionStage(i)(4) := '1';
 							if(writeback = '0') then
 								instructionStage(i)(4) := '0';
@@ -675,7 +673,7 @@ begin
 									operand(3) := instructions(i)(10);
 									operand(4) := instructions(i)(11);
 									register_busy := to_integer(unsigned(operand));
-									registers(register_busy) := '0';
+									registers(register_busy) := '0';													-- 1st operand used by this instruction is freed
 									newlyFreed := register_busy;
 									report "NOT BUSY: " & integer'image(to_integer(unsigned(operand)));
 								end if;
@@ -688,7 +686,7 @@ begin
 									operand(3) := instructions(i)(16);
 									operand(4) := instructions(i)(17);
 									register_busy := to_integer(unsigned(operand));
-									registers(register_busy) := '0';
+									registers(register_busy) := '0';													-- 2nd operand used by this instruction is freed
 									report "NOT BUSY: " & integer'image(to_integer(unsigned(operand)));
 								end if;
 								mode := instructions(i)(19);
@@ -699,7 +697,7 @@ begin
 									operand(3) := instructions(i)(22);
 									operand(4) := instructions(i)(23);
 									register_busy := to_integer(unsigned(operand));
-									registers(register_busy) := '0';
+									registers(register_busy) := '0';													-- 3rd operand used by this instruction is freed
 									report "NOT BUSY: " & integer'image(to_integer(unsigned(operand)));
 								end if;
 							else 
@@ -716,9 +714,9 @@ begin
 
 					i := i + 1;
 				end loop;					
-			else
+			else 																										-- if the clock shifts to the falling edge, also shifts values of signals to 0
 				if(fetchStall = 0) then
-					fetch <= '0';
+					fetch <= '0';																							-- exception to shifting, fetch and decode are stalling
 				end if;
 				if(decodeStall = 0) then
 					decode <= '0';

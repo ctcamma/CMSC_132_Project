@@ -3,8 +3,8 @@ use ieee.std_logic_1164.all;
 use work.std_logic_textio.all;
 use std.textio.all;
 
-package STATE_CONSTANTS is
-	constant load: std_logic_vector(0 to 2) := "000";
+package STATE_CONSTANTS is																	-- constant declaration
+	constant load: std_logic_vector(0 to 2) := "000";										-- format for instruction operations
 	constant addition: std_logic_vector(0 to 2) := "001";
 	constant subtraction: std_logic_vector(0 to 2) := "010";
 	constant multiplication: std_logic_vector(0 to 2) := "011";
@@ -12,15 +12,15 @@ package STATE_CONSTANTS is
 	constant modulo: std_logic_vector(0 to 2) := "101";
 
 
-	constant toFetch: std_logic_vector(0 to 2) := "000";
+	constant toFetch: std_logic_vector(0 to 2) := "000";									-- format for current stage cycle of the instructions
 	constant toDecode: std_logic_vector(0 to 2) := "001";
 	constant toExecute: std_logic_vector(0 to 2) := "010";
 	constant toMemory: std_logic_vector(0 to 2) := "011";
 	constant toWrite: std_logic_vector(0 to 2) := "100";
 	constant toEnd: std_logic_vector(0 to 2) := "101";
 
-	constant OPERAND_BITS: integer := 24;
-	constant REGISTER_COUNT: integer := 32;
+	constant OPERAND_BITS: integer := 24;													-- size of bits for each instructions
+	constant REGISTER_COUNT: integer := 32;													-- number of usable registers
 end package;
 
 
