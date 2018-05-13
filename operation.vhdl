@@ -15,6 +15,7 @@ entity operation is
 		writeback: inout std_logic;
 		sign_flag: inout std_logic;
 		underflow_flag: inout std_logic;
+		zero_flag: inout std_logic;
 		overflow_flag: inout std_logic;
 		zero_flag: inout std_logic;
 		pc0: out std_logic;
@@ -28,7 +29,8 @@ architecture operation of operation is
 	type OPCODES is array (0 to 14) of std_logic_vector(0 to OPERAND_BITS-1);
 	type int_array is array (0 to REGISTER_COUNT-1) of integer;
 	shared variable instructions: OPCODES;
-	shared variable counter: integer := 0;
+	shared variable fetchStall: integer := 0;
+	shared variable instructionCount: integer := 0;
 	shared variable clock_cycle: integer := 0;
 	shared variable registers: std_logic_vector(0 to REGISTER_COUNT-1) := (others => '0');
 	shared variable reg_value: int_array := (others => 0);
@@ -53,12 +55,12 @@ begin
  					opcode(1) := '0';
  					opcode(2) := '0';
 
- 					instructions(counter) := opcode;
+ 					instructions(instructionCount) := opcode;
 
- 					counter := counter + 1;
+ 					instructionCount := instructionCount + 1;
  				end loop;
  				assert false report "simulation done" severity note;
- 				report "instructions: " & integer'image(counter);
+ 				report "instructions: " & integer'image(instructionCount);
  				wait;
 		end process file_io;
 
@@ -87,14 +89,11 @@ begin
 				--pc2 <= cycle(2);
 				--pc3 <= cycle(3);
 
-				if clock_cycle <= counter then
+				if clock_cycle <= instructionCount then 
 					while i < clock_cycle loop
-
 						status(0) := instructions(i)(0);
 						status(1) := instructions(i)(1);
 						status(2) := instructions(i)(2);
-
-
 						case status is
 							when toFetch =>
 								if(fetch = '0') then
@@ -110,6 +109,7 @@ begin
 										operand(4) := instructions(i)(11);
 										register_busy := to_integer(unsigned(operand));
 										if registers(register_busy) = '1' then
+											fetchStall := 1;
 											report "fetch again";
 										else
 											registers(register_busy) := '1';
@@ -129,7 +129,9 @@ begin
 										operand(2) := instructions(i)(15);
 										operand(3) := instructions(i)(16);
 										operand(4) := instructions(i)(17);
+										register_busy := to_integer(unsigned(operand));
 										if registers(to_integer(unsigned(operand))) = '0' then
+											registers(register_busy) := '1';
 											mode := instructions(i)(18);
 											if mode = '1' then
 												operand(0) := instructions(i)(19);
@@ -137,7 +139,9 @@ begin
 												operand(2) := instructions(i)(21);
 												operand(3) := instructions(i)(22);
 												operand(4) := instructions(i)(23);
+												register_busy := to_integer(unsigned(operand));
 												if registers(to_integer(unsigned(operand))) = '0' then
+													registers(register_busy) := '1';
 													instructions(i)(1) := '1';
 													instructions(i)(2) := '0';
 												else
@@ -158,7 +162,9 @@ begin
 											operand(2) := instructions(i)(21);
 											operand(3) := instructions(i)(22);
 											operand(4) := instructions(i)(23);
+											register_busy := to_integer(unsigned(operand));
 											if registers(to_integer(unsigned(operand))) = '0' then
+												registers(register_busy) := '1';
 												instructions(i)(1) := '1';
 												instructions(i)(2) := '0';
 											else
@@ -198,7 +204,6 @@ begin
 												operand(2) := instructions(i)(15);
 												operand(3) := instructions(i)(16);
 												operand(4) := instructions(i)(17);
-
 												mode := instructions(i)(12);
 												if mode = '0' then
 													source1 := to_integer(unsigned(operand));
@@ -572,7 +577,6 @@ begin
 									report "writeback";
 									writeback <= '1';
 									instructions(i)(2) := '1';
-
 									mode := instructions(i)(6);
 									if mode = '1' then
 										operand(0) := instructions(i)(7);
@@ -580,6 +584,28 @@ begin
 										operand(2) := instructions(i)(9);
 										operand(3) := instructions(i)(10);
 										operand(4) := instructions(i)(11);
+										register_busy := to_integer(unsigned(operand));
+										registers(register_busy) := '0';
+										report "NOT BUSY: " & integer'image(to_integer(unsigned(operand)));
+									end if;
+									mode := instructions(i)(12);
+									if mode = '1' then
+										operand(0) := instructions(i)(13);
+										operand(1) := instructions(i)(14);
+										operand(2) := instructions(i)(15);
+										operand(3) := instructions(i)(16);
+										operand(4) := instructions(i)(17);
+										register_busy := to_integer(unsigned(operand));
+										registers(register_busy) := '0';
+										report "NOT BUSY: " & integer'image(to_integer(unsigned(operand)));
+									end if;
+									mode := instructions(i)(19);
+									if mode = '1' then
+										operand(0) := instructions(i)(19);
+										operand(1) := instructions(i)(20);
+										operand(2) := instructions(i)(21);
+										operand(3) := instructions(i)(22);
+										operand(4) := instructions(i)(23);
 										register_busy := to_integer(unsigned(operand));
 										registers(register_busy) := '0';
 										report "NOT BUSY: " & integer'image(to_integer(unsigned(operand)));
@@ -596,7 +622,7 @@ begin
 
 
 				else
-					while i < counter loop
+					while i < instructionCount loop
 						status(0) := instructions(i)(0);
 						status(1) := instructions(i)(1);
 						status(2) := instructions(i)(2);
@@ -617,6 +643,7 @@ begin
 										operand(4) := instructions(i)(11);
 										register_busy := to_integer(unsigned(operand));
 										if registers(register_busy) = '1' then
+											fetchStall := 1;
 											report "fetch again";
 										else
 											registers(register_busy) := '1';
@@ -636,7 +663,9 @@ begin
 										operand(2) := instructions(i)(15);
 										operand(3) := instructions(i)(16);
 										operand(4) := instructions(i)(17);
+										register_busy := to_integer(unsigned(operand));
 										if registers(to_integer(unsigned(operand))) = '0' then
+											registers(register_busy) := '1';
 											mode := instructions(i)(18);
 											if mode = '1' then
 												operand(0) := instructions(i)(19);
@@ -644,7 +673,9 @@ begin
 												operand(2) := instructions(i)(21);
 												operand(3) := instructions(i)(22);
 												operand(4) := instructions(i)(23);
+												register_busy := to_integer(unsigned(operand));
 												if registers(to_integer(unsigned(operand))) = '0' then
+													registers(register_busy) := '1';
 													instructions(i)(1) := '1';
 													instructions(i)(2) := '0';
 												else
@@ -665,7 +696,9 @@ begin
 											operand(2) := instructions(i)(21);
 											operand(3) := instructions(i)(22);
 											operand(4) := instructions(i)(23);
+											register_busy := to_integer(unsigned(operand));
 											if registers(to_integer(unsigned(operand))) = '0' then
+												registers(register_busy) := '1';
 												instructions(i)(1) := '1';
 												instructions(i)(2) := '0';
 											else
@@ -1089,6 +1122,29 @@ begin
 										registers(register_busy) := '0';
 										report "NOT BUSY: " & integer'image(to_integer(unsigned(operand)));
 									end if;
+									
+									mode := instructions(i)(12);
+									if mode = '1' then
+										operand(0) := instructions(i)(13);
+										operand(1) := instructions(i)(14);
+										operand(2) := instructions(i)(15);
+										operand(3) := instructions(i)(16);
+										operand(4) := instructions(i)(17);
+										register_busy := to_integer(unsigned(operand));
+										registers(register_busy) := '0';
+										report "NOT BUSY: " & integer'image(to_integer(unsigned(operand)));
+									end if;
+									mode := instructions(i)(19);
+									if mode = '1' then
+										operand(0) := instructions(i)(19);
+										operand(1) := instructions(i)(20);
+										operand(2) := instructions(i)(21);
+										operand(3) := instructions(i)(22);
+										operand(4) := instructions(i)(23);
+										register_busy := to_integer(unsigned(operand));
+										registers(register_busy) := '0';
+										report "NOT BUSY: " & integer'image(to_integer(unsigned(operand)));
+									end if;
 								else 
 									memory <= '1';
 								end if;
@@ -1098,12 +1154,13 @@ begin
 
 						i := i + 1;
 					end loop;
-				end if;
-
-
-
+				end if;						
 			else
-				fetch <= '0';
+				if(fetchStall = 0) then
+					fetch <= '0';
+				end if;
+				fetchStall := 0;
+				
 				decode <= '0';
 				execute <= '0';
 				memory <= '0';
@@ -1120,4 +1177,3 @@ begin
 		end process operates;
 
 end architecture operation;
-
