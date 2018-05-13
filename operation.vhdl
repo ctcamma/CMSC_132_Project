@@ -15,7 +15,6 @@ entity operation is
 		writeback: inout std_logic;
 		sign_flag: inout std_logic;
 		underflow_flag: inout std_logic;
-		zero_flag: inout std_logic;
 		overflow_flag: inout std_logic;
 		zero_flag: inout std_logic;
 		pc0: out std_logic;
