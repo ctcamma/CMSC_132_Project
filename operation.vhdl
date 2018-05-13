@@ -26,12 +26,15 @@ end entity operation;
 architecture operation of operation is
 	-- (Noobgineer, https://stackoverflow.com/questions/36881697/array-of-std-logic-vector?rq=1)
 	type OPCODES is array (0 to 14) of std_logic_vector(0 to OPERAND_BITS-1);
+	type OPCODE_STAGE is array (0 to 14) of std_logic_vector(0 to 4);
 	type int_array is array (0 to REGISTER_COUNT-1) of integer;
 	shared variable instructions: OPCODES;
+	shared variable instructionStage: OPCODE_STAGE := (others => "00000");
 	shared variable fetchStall: integer := 0;
 	shared variable decodeStall: integer := 0;
 	shared variable executeStall: integer := 0;
 	shared variable memoryStall: integer := 0;
+	shared variable writeStall: integer := 0;
 	shared variable instructionCount: integer := 0;
 	shared variable clock_cycle: integer := 0;
 	shared variable registers: std_logic_vector(0 to REGISTER_COUNT-1) := (others => '0');
@@ -87,11 +90,11 @@ begin
 			if rising_edge(clock) then
 				i := 0;
 				clock_cycle := clock_cycle + 1;
-				cycle := to_unsigned(clock_cycle, 4);
-				pc0 <= cycle(0);
-				pc1 <= cycle(1);
-				pc2 <= cycle(2);
-				pc3 <= cycle(3);
+				--cycle := to_unsigned(clock_cycle, 4);
+				--pc0 <= cycle(0);
+				--pc1 <= cycle(1);
+				--pc2 <= cycle(2);
+				--pc3 <= cycle(3);
 
 				if clock_cycle <= instructionCount then 
 					iterator := clock_cycle;
@@ -107,6 +110,7 @@ begin
 
 					case status is
 						when toFetch =>
+							report "toFetch";
 							if(fetch = '0') then
 								report "fetch";
 								fetch <= '1';
@@ -121,11 +125,13 @@ begin
 									register_busy := to_integer(unsigned(operand));
 									if registers(register_busy) = '1' then
 										fetchStall := 1;
+										instructionStage(i)(0) := '1';
 										report "fetch again";
 									else
 										registers(register_busy) := '1';
 										report "register_busy: " & integer'image(to_integer(unsigned(operand)));
 										instructions(i)(2) := '1';
+										instructionStage(i)(0) := '0';
 										mode := instructions(i)(12);
 										if mode = '1' then
 											operand(0) := instructions(i)(13);
@@ -148,8 +154,13 @@ begin
 										end if;
 									end if;
 								end if;
+							else
+								if instructionStage(i)(0) = '1' then
+									fetch <= '1';
+								end if;
 							end if;
 						when toDecode =>
+							report "toDecode";
 							if(decode = '0') then
 								report "decode";
 								decode <= '1';
@@ -173,25 +184,31 @@ begin
 													if to_integer(unsigned(operand)) /= newlyFreed then
 														instructions(i)(2) := '0';
 														instructions(i)(1) := '1';
+														instructionStage(i)(1) := '0';
 													else
 														report "newlyFreed: " & integer'image(newlyFreed);
 														decodeStall := 1;
+														instructionStage(i)(1) := '1';
 													end if;
 												else
 													report "BUSY REGISTER: " & integer'image(to_integer(unsigned(operand)));
-													decodeStall := 1;															
+													decodeStall := 1;
+													instructionStage(i)(1) := '1';															
 												end if;
 											else
 												instructions(i)(1) := '1';
 												instructions(i)(2) := '0';
+												instructionStage(i)(1) := '0';
 											end if;
 										else
 											report "newlyFreed: " & integer'image(newlyFreed);
 											decodeStall := 1; 
+											instructionStage(i)(1) := '1';
 										end if ;
 									else
 										report "BUSY REGISTER: " & integer'image(to_integer(unsigned(operand)));
 										decodeStall := 1;
+										instructionStage(i)(1) := '1';
 									end if;
 								else
 									mode := instructions(i)(18);
@@ -205,25 +222,38 @@ begin
 											if to_integer(unsigned(operand)) /= newlyFreed then
 												instructions(i)(2) := '0';
 												instructions(i)(1) := '1';
+												instructionStage(i)(1) := '0';
 											else
 												report "newlyFreed: " & integer'image(newlyFreed);
 												decodeStall := 1;
+												instructionStage(i)(1) := '1';
 											end if;
 										else
 											report "BUSY REGISTER: " & integer'image(to_integer(unsigned(operand)));
 											decodeStall := 1;
+											instructionStage(i)(1) := '1';
 										end if;
 									else
 										instructions(i)(1) := '1';
 										instructions(i)(2) := '0';
+										instructionStage(i)(1) := '0';
 									end if;
 								end if;
 							else 
-								fetch <= '1';
-								fetchStall := 1;
+								if instructionStage(i)(1) = '1' then
+									report "STALL DECODE";
+									decode <= '1';
+								else
+									report "STALL FETCH";
+									fetch <= '1';
+									fetchStall := 1;
+								end if;
 							end if;
 						when toExecute =>
+							report "toExecute";
+							instructionStage(i)(2) := '1';
 							if(execute = '0') then
+								instructionStage(i)(2) := '0';
 								report "execute";
 								execute <= '1';
 								instructions(i)(2) := '1';
@@ -604,22 +634,36 @@ begin
 								end case;
 
 							else 
-								decode <= '1';
-								decodeStall := 1;
+								if instructionStage(i)(2) = '1' then
+									execute <= '1';
+								else
+									decode <= '1';
+									decodeStall := 1;
+								end if;
 							end if;
 						when toMemory =>
+							report "toMemory";
+							instructionStage(i)(3) := '1';
 							if(memory = '0') then
+								instructionStage(i)(3) := '0';
 								report "memory";
 								memory <= '1';
 								instructions(i)(0) := '1';
 								instructions(i)(1) := '0';
 								instructions(i)(2) := '0';
 							else 
-								execute <= '1';
-								executeStall := 1;
+								if instructionStage(i)(3) = '1' then
+									memory <= '1';
+								else
+									execute <= '1';
+									executeStall := 1;
+								end if ;
 							end if;
 						when toWrite =>
+							report "toWrite";
+							instructionStage(i)(4) := '1';
 							if(writeback = '0') then
+								instructionStage(i)(4) := '0';
 								report "writeback";
 								writeback <= '1';
 								instructions(i)(2) := '1';
@@ -659,8 +703,12 @@ begin
 									report "NOT BUSY: " & integer'image(to_integer(unsigned(operand)));
 								end if;
 							else 
-								memory <= '1';
-								memoryStall := 1;
+								if instructionStage(i)(4) = '1' then
+									writeback <= '1';
+								else
+									memory <= '1';
+									memoryStall := 1;
+								end if ;
 							end if;
 						when others =>
 							i := i;
@@ -681,6 +729,9 @@ begin
 				if(memoryStall = 0) then
 					memory <= '0';
 				end if;
+				if(writeStall = 0) then
+					writeback <= '0';
+				end if;
 
 				fetchStall := 0;
 				decodeStall := 0;
@@ -688,8 +739,6 @@ begin
 				memoryStall := 0;
 
 				newlyFreed := -1;
-
-				writeback <= '0';
 				sign_flag <= '0';
 				underflow_flag <= '0';
 				overflow_flag <= '0';
