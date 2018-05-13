@@ -17,6 +17,7 @@ entity operation is
 		underflow_flag: inout std_logic;
 		zero_flag: inout std_logic;
 		overflow_flag: inout std_logic;
+		zero_flag: inout std_logic;
 		pc0: out std_logic;
 		pc1: out std_logic;
 		pc2: out std_logic;
@@ -213,6 +214,12 @@ begin
 														source1 := to_integer(unsigned(immediateBinaryVector));
 														overflow_flag <= '1';
 													end if;
+													if source1 = 0 then
+														zero_flag <= '1';
+													end if;
+													if source1 >= 0 then 
+														sign_flag <= '1';
+													end if;
 													reg_value(destination) := source1;
 													report "reg_value of " & integer'image(destination) &
 														": " & integer'image(reg_value(destination));
@@ -270,6 +277,12 @@ begin
 												end if;
 
 												reg_value(destination) := source1 + source2;
+												if reg_value(destination) = 0 then
+														zero_flag <= '1';
+													end if;
+												if reg_value(destination) >= 0 then 
+														sign_flag <= '1';
+													end if;
 												if reg_value(destination) > 3 then
 													immediateBinary := to_unsigned(reg_value(destination), 2);
 													immediateBinaryVector(0) := immediateBinary(0);
@@ -330,6 +343,12 @@ begin
 												end if;
 
 												reg_value(destination) := source1 - source2;
+												if reg_value(destination) = 0 then
+														zero_flag <= '1';
+													end if;
+												if reg_value(destination) >= 0 then 
+														sign_flag <= '1';
+													end if;
 												if reg_value(destination) > 3 then
 													immediateBinary := to_unsigned(reg_value(destination), 2);
 													immediateBinaryVector(0) := immediateBinary(0);
@@ -390,6 +409,12 @@ begin
 												end if;
 
 												reg_value(destination) := source1 * source2;
+												if reg_value(destination) = 0 then
+														zero_flag <= '1';
+													end if;
+												if reg_value(destination) >= 0 then 
+														sign_flag <= '1';
+													end if;
 												if reg_value(destination) > 3 then
 													immediateBinary := to_unsigned(reg_value(destination), 2);
 													immediateBinaryVector(0) := immediateBinary(0);
@@ -450,6 +475,12 @@ begin
 												end if;
 
 												reg_value(destination) := source1 / source2;
+												if reg_value(destination) = 0 then
+														zero_flag <= '1';
+													end if;
+												if reg_value(destination) >= 0 then 
+														sign_flag <= '1';
+													end if;
 												if reg_value(destination) > 3 then
 													immediateBinary := to_unsigned(reg_value(destination), 2);
 													immediateBinaryVector(0) := immediateBinary(0);
@@ -510,6 +541,12 @@ begin
 												end if;
 
 												reg_value(destination) := source1 mod source2;
+												if reg_value(destination) = 0 then
+														zero_flag <= '1';
+													end if;
+												if reg_value(destination) >= 0 then 
+														sign_flag <= '1';
+													end if;
 												if reg_value(destination) > 3 then
 													immediateBinary := to_unsigned(reg_value(destination), 2);
 													immediateBinaryVector(0) := immediateBinary(0);
@@ -711,6 +748,12 @@ begin
 														source1 := to_integer(unsigned(immediateBinaryVector));
 														overflow_flag <= '1';
 													end if;
+													if source1 = 0 then
+														zero_flag <= '1';
+													end if;
+													if source1 >= 0 then 
+														sign_flag <= '1';
+													end if;
 													reg_value(destination) := source1;
 													report "reg_value of " & integer'image(destination) &
 														": " & integer'image(reg_value(destination));
@@ -768,6 +811,12 @@ begin
 												end if;
 
 												reg_value(destination) := source1 + source2;
+												if reg_value(destination) = 0 then
+														zero_flag <= '1';
+													end if;
+												if reg_value(destination) >= 0 then 
+														sign_flag <= '1';
+													end if;
 												if reg_value(destination) > 3 then
 													immediateBinary := to_unsigned(reg_value(destination), 2);
 													immediateBinaryVector(0) := immediateBinary(0);
@@ -828,6 +877,12 @@ begin
 												end if;
 
 												reg_value(destination) := source1 - source2;
+												if reg_value(destination) = 0 then
+														zero_flag <= '1';
+													end if;
+												if reg_value(destination) >= 0 then 
+														sign_flag <= '1';
+													end if;
 												if reg_value(destination) > 3 then
 													immediateBinary := to_unsigned(reg_value(destination), 2);
 													immediateBinaryVector(0) := immediateBinary(0);
@@ -888,6 +943,12 @@ begin
 												end if;
 
 												reg_value(destination) := source1 * source2;
+												if reg_value(destination) = 0 then
+														zero_flag <= '1';
+													end if;
+												if reg_value(destination) >= 0 then 
+														sign_flag <= '1';
+													end if;
 												if reg_value(destination) > 3 then
 													immediateBinary := to_unsigned(reg_value(destination), 2);
 													immediateBinaryVector(0) := immediateBinary(0);
@@ -948,6 +1009,12 @@ begin
 												end if;
 
 												reg_value(destination) := source1 / source2;
+												if reg_value(destination) = 0 then
+														zero_flag <= '1';
+													end if;
+												if reg_value(destination) >= 0 then 
+														sign_flag <= '1';
+													end if;
 												if reg_value(destination) > 3 then
 													immediateBinary := to_unsigned(reg_value(destination), 2);
 													immediateBinaryVector(0) := immediateBinary(0);
@@ -1008,6 +1075,12 @@ begin
 												end if;
 
 												reg_value(destination) := source1 mod source2;
+												if reg_value(destination) = 0 then
+														zero_flag <= '1';
+													end if;
+												if reg_value(destination) >= 0 then 
+														sign_flag <= '1';
+													end if;
 												if reg_value(destination) > 3 then
 													immediateBinary := to_unsigned(reg_value(destination), 2);
 													immediateBinaryVector(0) := immediateBinary(0);
@@ -1095,6 +1168,7 @@ begin
 				sign_flag <= '0';
 				underflow_flag <= '0';
 				overflow_flag <= '0';
+				zero_flag <= '0';
 				pc0 <= '0';
 				pc1 <= '0';
 				pc2 <= '0';

@@ -44,6 +44,7 @@ architecture file_reading of pipeline is
 	signal sign_flag: std_logic := '0';
 	signal underflow_flag: std_logic := '0';
 	signal overflow_flag: std_logic := '0';
+	signal zero_flag: std_logic := '0';
 	signal pc0: std_logic := '0';
 	signal pc1: std_logic := '0';
 	signal pc2: std_logic := '0';
@@ -59,6 +60,7 @@ architecture file_reading of pipeline is
 			sign_flag: inout std_logic;
 			underflow_flag: inout std_logic;
 			overflow_flag: inout std_logic;
+			zero_flag: inout std_logic;
 			pc0: out std_logic;
 			pc1: out std_logic;
 			pc2: out std_logic;
@@ -67,7 +69,7 @@ architecture file_reading of pipeline is
 
 	begin
 		uut: component operation port map(clock, fetch, decode, execute, memory, writeback, sign_flag, underflow_flag,
-											overflow_flag, pc0, pc1, pc2, pc3);
+											overflow_flag, zero_flag, pc0, pc1, pc2, pc3);
 		clk: clock <= not clock after (PERIOD1/2);
 
 
