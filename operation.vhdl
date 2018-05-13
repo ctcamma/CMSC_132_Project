@@ -174,20 +174,24 @@ begin
 														instructions(i)(2) := '0';
 														instructions(i)(1) := '1';
 													else
-														report "newlyFreed: " & integer'image(newlyFreed); 
+														report "newlyFreed: " & integer'image(newlyFreed);
+														decodeStall := 1;
 													end if;
 												else
-													report "BUSY REGISTER: " & integer'image(to_integer(unsigned(operand)));															
+													report "BUSY REGISTER: " & integer'image(to_integer(unsigned(operand)));
+													decodeStall := 1;															
 												end if;
 											else
 												instructions(i)(1) := '1';
 												instructions(i)(2) := '0';
 											end if;
 										else
-											report "newlyFreed: " & integer'image(newlyFreed); 
+											report "newlyFreed: " & integer'image(newlyFreed);
+											decodeStall := 1; 
 										end if ;
 									else
 										report "BUSY REGISTER: " & integer'image(to_integer(unsigned(operand)));
+										decodeStall := 1;
 									end if;
 								else
 									mode := instructions(i)(18);
@@ -203,9 +207,11 @@ begin
 												instructions(i)(1) := '1';
 											else
 												report "newlyFreed: " & integer'image(newlyFreed);
+												decodeStall := 1;
 											end if;
 										else
-											report "BUSY REGISTER: " & integer'image(to_integer(unsigned(operand)));															
+											report "BUSY REGISTER: " & integer'image(to_integer(unsigned(operand)));
+											decodeStall := 1;
 										end if;
 									else
 										instructions(i)(1) := '1';
@@ -692,7 +698,7 @@ begin
 				pc1 <= '0';
 				pc2 <= '0';
 				pc3 <= '0';
-				
+
 			end if;
 		end process operates;
 
